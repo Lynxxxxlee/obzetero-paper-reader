@@ -1,0 +1,4 @@
+interface:
+  display_name: "ObZetero Paper Reader"
+  short_description: "Zotero 与 Obsidian 论文精读同步工具"
+  default_prompt: "Use $obzetero-paper-reader to sync a Zotero collection into Obsidian and generate Chinese paper reading notes."
