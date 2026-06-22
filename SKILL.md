@@ -1,6 +1,6 @@
 ---
 name: obzetero-paper-reader
-description: Read papers from Zotero collections, extract local PDFs, generate Chinese intensive-reading notes, sync them into Obsidian, and keep Zotero reading-status tags in sync with Obsidian note frontmatter and collection indexes. Use when the user asks to automatically read, summarize,精读, index, count, or bidirectionally sync Zotero papers with Obsidian.
+description: Read papers from Zotero collections, extract local PDFs for items tagged 待阅读, generate Chinese intensive-reading notes, sync them into Obsidian, and keep Zotero reading-status tags in sync with Obsidian note frontmatter and collection indexes. Use when the user asks to automatically read, summarize,精读, index, count, or bidirectionally sync Zotero papers with Obsidian.
 ---
 
 # ObZetero Paper Reader
@@ -25,6 +25,7 @@ python3 scripts/obzetero_sync.py index --collection "LLM"
 ```
 
 Use `--vault "/path/to/vault"` when the target vault is not `~/Documents/LLM Papers`.
+Use `python3 scripts/obzetero_sync.py read --collection "LLM" --all` only when the user explicitly wants every item in the collection prepared for intensive reading.
 
 ## Reading Status
 
@@ -54,13 +55,16 @@ Only one status should remain per Zotero item. If multiple status tags exist, no
 
 Use `references/note-template.md` as the section contract. Keep user-written sections intact. Update only the automatic sections unless the user explicitly asks to rewrite their manual notes.
 
+Only items with Zotero tag `待阅读` or `/待阅读` are intensive-reading targets by default. Do not generate or rewrite `AUTO: Chinese Reading Notes` for papers without this tag unless the user explicitly requests `--all` or names those papers.
+
 For Chinese intensive-reading content:
 
-1. Extract the PDF text with `read`.
-2. Read enough of the extracted text to understand the paper.
-3. Fill the `AUTO: Chinese Reading Notes` section in Chinese.
-4. Preserve `MANUAL:` sections.
-5. Rebuild indexes after note edits.
+1. Ensure the target Zotero item has tag `待阅读` or `/待阅读`.
+2. Extract the PDF text with `read`.
+3. Read enough of the extracted text to understand the paper.
+4. Fill the `AUTO: Chinese Reading Notes` section in Chinese.
+5. Preserve `MANUAL:` sections.
+6. Rebuild indexes after note edits.
 
 ## Safety
 

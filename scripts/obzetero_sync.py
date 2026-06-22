@@ -32,6 +32,7 @@ STATUS_TO_TAG = {value: key for key, value in STATUS_TAGS.items()}
 STATUS_PRIORITY = {"reading": 3, "read": 2, "unread": 1}
 INDEX_MARK = {"read": "x", "unread": " ", "reading": ">"}
 MARK_STATUS = {"x": "read", "X": "read", " ": "unread", ">": "reading"}
+INTENSIVE_READING_TAG = "待阅读"
 
 DEFAULT_VAULT = Path("~/Documents/LLM Papers").expanduser()
 DEFAULT_ZOTERO_DB = Path("~/Zotero/zotero.sqlite").expanduser()
@@ -62,6 +63,10 @@ class Paper:
             return "unread"
         return sorted(statuses, key=lambda s: STATUS_PRIORITY[s], reverse=True)[0]
 
+    @property
+    def ready_for_intensive_reading(self) -> bool:
+        return any(is_intensive_reading_tag(tag) for tag in self.tags)
+
 
 def status_from_tag(tag: str) -> str | None:
     return STATUS_TAGS.get(tag.lstrip("/"))
@@ -69,6 +74,10 @@ def status_from_tag(tag: str) -> str | None:
 
 def is_status_tag(tag: str) -> bool:
     return status_from_tag(tag) is not None
+
+
+def is_intensive_reading_tag(tag: str) -> bool:
+    return tag.lstrip("/") == INTENSIVE_READING_TAG
 
 
 def slugify(value: str, limit: int = 110) -> str:
@@ -665,6 +674,7 @@ def command_scan(args: argparse.Namespace) -> None:
                     "key": paper.key,
                     "title": paper.title,
                     "status": paper.status,
+                    "ready_for_intensive_reading": paper.ready_for_intensive_reading,
                     "tags": paper.tags,
                     "pdfs": [str(path) for path in paper.pdfs],
                 }
@@ -678,13 +688,17 @@ def command_scan(args: argparse.Namespace) -> None:
 
 def command_read(args: argparse.Namespace) -> None:
     papers = fetch_papers(args.zotero_db, args.collection, args.zotero_storage)
+    read_targets = papers if args.all else [paper for paper in papers if paper.ready_for_intensive_reading]
     state = load_state(args.vault)
-    write_notes(papers, args.vault, args.collection, state)
-    write_extracts(papers, args.vault, args.collection)
+    write_notes(read_targets, args.vault, args.collection, state)
+    write_extracts(read_targets, args.vault, args.collection)
     write_index(papers, args.vault, args.collection, state)
     write_dashboard(args.vault, state)
     save_state(args.vault, state)
-    print(f"Prepared notes and extracts for {len(papers)} papers.")
+    if args.all:
+        print(f"Prepared notes and extracts for {len(read_targets)} papers.")
+    else:
+        print(f"Prepared notes and extracts for {len(read_targets)} papers tagged {INTENSIVE_READING_TAG}.")
 
 
 def command_index(args: argparse.Namespace) -> None:
@@ -721,6 +735,8 @@ def build_parser() -> argparse.ArgumentParser:
     ]:
         cmd = sub.add_parser(name)
         cmd.add_argument("--collection", required=True)
+        if name == "read":
+            cmd.add_argument("--all", action="store_true", help="Prepare notes and extracts for all collection papers, not only 待阅读-tagged papers.")
         if name == "sync":
             cmd.add_argument("--write-zotero", action="store_true", help="Write Obsidian status back to Zotero tags.")
         cmd.set_defaults(func=func)

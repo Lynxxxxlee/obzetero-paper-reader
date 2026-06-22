@@ -6,7 +6,7 @@
 
 - 从任意 Zotero 集合读取论文元数据、作者、摘要、标签和本地 PDF。
 - 将论文同步到 Obsidian vault，按集合生成论文笔记、索引和阅读统计面板。
-- 提取 PDF 全文，为 Codex 生成中文论文精读笔记提供输入。
+- 只为带有 `待阅读` 或 `/待阅读` 标签的论文提取 PDF 全文，并为 Codex 生成中文论文精读笔记提供输入。
 - 使用 Zotero 标签同步阅读状态：
   - `已读` / `/已读` -> `read`
   - `阅读中` / `/阅读中` -> `reading`
@@ -27,6 +27,12 @@ python3 scripts/obzetero_sync.py scan --collection "LLM"
 python3 scripts/obzetero_sync.py read --collection "LLM"
 python3 scripts/obzetero_sync.py sync --collection "LLM"
 python3 scripts/obzetero_sync.py index --collection "LLM"
+```
+
+`read` 默认只处理 Zotero 中标了 `待阅读` 或 `/待阅读` 的论文。需要全量处理时再显式使用：
+
+```bash
+python3 scripts/obzetero_sync.py read --collection "LLM" --all
 ```
 
 写回 Zotero 标签前请先关闭 Zotero：
